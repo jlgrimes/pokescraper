@@ -7,7 +7,7 @@ import sys
 import json
 import re
 import argparse
-import boto3
+import azure.functions as func
 
 #my imports
 from PokescraperTrigger.standing import Standing
@@ -568,18 +568,18 @@ def mainWorker(directory, link, getDecklists, getRoster):
 			
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " with no issues")
-		return {
-        'statusCode': 200,
-        'body': 'Tournament successfully updated'
-    }
+		return func.HttpResponse(
+				"Tournament successfully updated",
+				status_code=200
+	)
 	except Exception as e:
 		print(e)
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " WITH ISSUES")
-		return {
-        'statusCode': 200,
-        'body': str(e)
-    }
+		return func.HttpResponse(
+			str(e),
+			status_code=400
+		)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
