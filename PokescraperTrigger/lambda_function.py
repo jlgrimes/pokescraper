@@ -1,5 +1,5 @@
 import json
-from standings import mainWorker
+from PokescraperTrigger.standings import mainWorker
 
 def lambda_handler(event, context):
     if "id" not in event:

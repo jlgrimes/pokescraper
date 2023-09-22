@@ -10,9 +10,9 @@ import argparse
 import boto3
 
 #my imports
-from standing import Standing
+from PokescraperTrigger.standing import Standing
 from player import Player
-from decklists import Decklists, PlayersData
+from PokescraperTrigger.decklists import Decklists, PlayersData
 
 
 import math
