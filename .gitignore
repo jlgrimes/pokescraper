@@ -1,0 +1,5 @@
+/__pycache__
+*.csv
+juniors*.json
+seniors*.json
+masters*.json
