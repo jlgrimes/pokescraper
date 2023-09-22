@@ -1,5 +1,10 @@
 /__pycache__
+/package
+*.zip
+
 *.csv
 juniors*.json
 seniors*.json
 masters*.json
+tournaments.json
+.*
