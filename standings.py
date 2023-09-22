@@ -43,7 +43,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 	#sys.stdout.flush()
 	starttime = time.time()
 
-	s3 = boto3.resource('s3')
+	s3 = boto3.client('s3')
 	BUCKET = 'pokescraper'
 
 	try:
@@ -63,10 +63,6 @@ def mainWorker(directory, link, getDecklists, getRoster):
 		print('starting at : ' + strTime)
 
 		standings = []		
-		s3.put_object(Bucket=BUCKET,
-              Key='encrypt-key',
-              Body=b'foobar',
-              ServerSideEncryption='aws:kms')
 
 		standings.append(Standing(title, directory, 'juniors', 'Juniors', [link], []))
 		standings.append(Standing(title, directory, 'seniors', 'Seniors', [link], []))
@@ -132,10 +128,9 @@ def mainWorker(directory, link, getDecklists, getRoster):
 
 				publishedStandings = []
 
-				s3TablesDirectory = standing.tournamentDirectory + "/" + standing.directory + "_tables.json"
+				s3TablesDirectory = standing.tournamentDirectory + "_" + standing.directory + "_tables.json"
 				s3TablesExportString = ""
 
-				jsonExportTables = open(standing.directory + standing.tournamentDirectory + "tables.json", 'wb')
 				s3TablesExportString += '['
 
 				stillPlaying = 0
@@ -440,7 +435,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 						print("Standing : " + standing.type + " - " + standing.tournamentName + " - in " + standing.tournamentDirectory + "/" + standing.directory + " for " + standing.divisionName + " NbPlayers: "+ str(len(standing.players)) + " -> [" + standing.level + "/" + str(standing.roundsDay1) + "/" + str(standing.roundsDay2) + "]")
 						
 						s3PlayersExportString = ""
-						s3PlayersDirectory = standing.tournamentDirectory + "/" + standing.directory + "_players.json"
+						s3PlayersDirectory = standing.tournamentDirectory + "_" + standing.directory + "_players.json"
 
 						s3PlayersExportString += '{"players":['
 						for player in standing.players:
@@ -478,8 +473,8 @@ def mainWorker(directory, link, getDecklists, getRoster):
 			if len(countries)>0:
 				countCountries, namesCountries = zip(*sorted(zip(countCountries, namesCountries), reverse=True))
 			
-			s3TablesResponse = s3.get_object(Bucket=BUCKET + "/tournaments.json",
-                         Key='encrypt-key')
+			s3TablesResponse = s3.get_object(Bucket=BUCKET,
+                         Key='tournaments.json')
 			data = s3TablesResponse['Body'].read()
 
 			# Iterating through the json
@@ -553,30 +548,38 @@ def mainWorker(directory, link, getDecklists, getRoster):
 			s3TablesExportString += ']'
 
 			# Update Tables for this tournament in S3
-			s3.put_object(Bucket=BUCKET + "/" + s3TablesExportString,
-              Key='encrypt-key',
-              Body=s3TablesExportString,
+			s3.put_object(Bucket=BUCKET,
+              Key=s3TablesDirectory,
+              Body=s3TablesExportString.encode('UTF-8'),
               ServerSideEncryption='aws:kms')
 			
 			# Update players for this tournament in S3
 			# I think this is how you put to a directory..??
-			s3.put_object(Bucket=BUCKET + "/" + s3PlayersDirectory,
-              Key='encrypt-key',
-              Body=s3PlayersExportString,
+			s3.put_object(Bucket=BUCKET,
+              Key=s3PlayersDirectory,
+              Body=s3PlayersExportString.encode('UTF-8'),
               ServerSideEncryption='aws:kms')
 
 			# Update tournaments.json
-			s3.put_object(Bucket=BUCKET + "/tournaments.json",
-              Key='encrypt-key',
-              Body=s3TournamentsExportString,
+			s3.put_object(Bucket=BUCKET,
+              Key='tournaments.json',
+              Body=s3TournamentsExportString.encode('UTF-8'),
               ServerSideEncryption='aws:kms')
 			
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " with no issues")
+		return {
+        'statusCode': 200,
+        'body': 'Tournament successfully updated'
+    }
 	except Exception as e:
 		print(e)
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " WITH ISSUES")
+		return {
+        'statusCode': 200,
+        'body': str(e)
+    }
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()

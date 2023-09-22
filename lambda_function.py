@@ -2,19 +2,16 @@ import json
 from standings import mainWorker
 
 def lambda_handler(event, context):
-    if event['directory'] == None:
+    if "id" not in event:
         return {
             'statusCode': 400,
-            'body': json.dumps('Missing required directory param')
+            'body': json.dumps('Missing required id param')
         }
-    if event['link'] == None:
+    if "url" not in event:
         return {
             'statusCode': 400,
-            'body': json.dumps('Missing required link param')
+            'body': json.dumps('Missing required url param')
         }
 
-    mainWorker(event['directory'], event['link'], event['getDecklists'], event['getRoster'])
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Worker worked!')
-    }
+    ret = mainWorker(event['id'], event['url'], False, False)
+    return ret
