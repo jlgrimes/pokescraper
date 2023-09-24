@@ -122,7 +122,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 						publishedStandings.append(player.replace('  ', ' '))
 
 				publishedStandings = []
-				jsonExportTables = open(standing.directory + standing.tournamentDirectory + "tables.json", 'wb')
+				jsonExportTables = open("/tmp/" + standing.directory + standing.tournamentDirectory + "tables.json", 'wb')
 				jsonExportTables.write(('[').encode())
 
 				stillPlaying = 0
@@ -425,7 +425,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 							standing.roundsDay2 = standing.roundsDay1						
 					if(roundsSet == True and iRounds == 0):
 						print("Standing : " + standing.type + " - " + standing.tournamentName + " - in " + standing.tournamentDirectory + "/" + standing.directory + " for " + standing.divisionName + " NbPlayers: "+ str(len(standing.players)) + " -> [" + standing.level + "/" + str(standing.roundsDay1) + "/" + str(standing.roundsDay2) + "]")
-						jsonPlayers = open(standing.directory + standing.tournamentDirectory + "players.json", 'wb')
+						jsonPlayers = open("/tmp/" + standing.directory + standing.tournamentDirectory + "players.json", 'wb')
 						jsonPlayers.write(('{"players":[').encode())
 						for player in standing.players:
 							jsonPlayers.write(('{"id":"'+str(player.id)+'","name":"'+str(player.name)+'"},').encode())
@@ -463,7 +463,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 			if len(countries)>0:
 				countCountries, namesCountries = zip(*sorted(zip(countCountries, namesCountries), reverse=True))
 			
-			f = open('tournaments.json', encoding="utf-8")
+			f = open("/tmp/" + 'tournaments.json', encoding="utf-8")
 			data = json.load(f)
 			f.close()
 
@@ -499,11 +499,11 @@ def mainWorker(directory, link, getDecklists, getRoster):
 					newData = {"id": standing.tournamentDirectory, "name": standing.tournamentName, "date": {"start": startDate, "end": endDate}, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": standing.urls[0]}
 					data.append(newData)
 
-			with open("tournaments.json", "w") as outfile:
+			with open("/tmp/" + "tournaments.json", "w") as outfile:
 				json.dump(data, outfile)
 			nbRounds = 0
 
-			csvExport = open(standing.directory + standing.tournamentDirectory + ".csv", 'wb')
+			csvExport = open("/tmp/" + standing.directory + standing.tournamentDirectory + ".csv", 'wb')
 			for player in standing.players:
 				if(player):
 					player.ToCSV(csvExport)
@@ -522,7 +522,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 						player.decklist_ptcgo = decklists_players.players[deck_index].ptcgo_decklist
 						player.decklist_json = decklists_players.players[deck_index].json_decklist
 				
-			jsonExport = open(standing.directory + standing.tournamentDirectory + ".json", 'wb')
+			jsonExport = open("/tmp/" + standing.directory + standing.tournamentDirectory + ".json", 'wb')
 			jsonExport.write(('[').encode())
 			first = True
 			for player in standing.players:
