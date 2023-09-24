@@ -27,6 +27,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     if id and url:
         ret = mainWorker(id, url, False, False)
+        return ret
     else:
         return func.HttpResponse(
              "Missing required params id and url",

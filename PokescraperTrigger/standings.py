@@ -548,7 +548,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " WITH ISSUES")
 		return func.HttpResponse(
-             'Something went wrong.',
+             str(e),
              status_code=400
         )
 
