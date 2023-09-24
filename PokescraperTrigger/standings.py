@@ -11,7 +11,7 @@ import azure.functions as func
 
 #my imports
 from PokescraperTrigger.standing import Standing
-from player import Player
+from PokescraperTrigger.player import Player
 from PokescraperTrigger.decklists import Decklists, PlayersData
 
 
