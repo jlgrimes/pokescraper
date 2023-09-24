@@ -1,6 +1,6 @@
 import logging
 
-from standings import mainWorker
+from PokescraperTrigger.standings import mainWorker
 import azure.functions as func
 
 
