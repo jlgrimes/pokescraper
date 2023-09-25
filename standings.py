@@ -35,7 +35,7 @@ def strip_accents(input_str):
 def Points(elem):
 	return elem.points
 
-def mainWorker(directory, link, getDecklists, getRoster, s3):
+def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
 	lastPageLoaded = ""
 	page = None
 	soup = None
@@ -44,6 +44,11 @@ def mainWorker(directory, link, getDecklists, getRoster, s3):
 	starttime = time.time()
 
 	try:
+		s3PlayersExportString = ""
+
+		directory = tournament['id']
+		link = tournament['rk9link']
+
 		url = 'https://rk9.gg/tournament/' + link
 		page = requests.get(url)
 		soup = BeautifulSoup(page.content, "html.parser")
@@ -430,9 +435,6 @@ def mainWorker(directory, link, getDecklists, getRoster, s3):
 							standing.roundsDay2 = standing.roundsDay1						
 					if(roundsSet == True and iRounds == 0):
 						print("Standing : " + standing.type + " - " + standing.tournamentName + " - in " + standing.tournamentDirectory + "/" + standing.directory + " for " + standing.divisionName + " NbPlayers: "+ str(len(standing.players)) + " -> [" + standing.level + "/" + str(standing.roundsDay1) + "/" + str(standing.roundsDay2) + "]")
-						
-						s3PlayersExportString = ""
-						s3PlayersDirectory = standing.tournamentDirectory + "_" + standing.directory + "_players.json"
 
 						s3PlayersExportString += '{"players":['
 						for player in standing.players:
@@ -469,28 +471,38 @@ def mainWorker(directory, link, getDecklists, getRoster, s3):
 			
 			did_update_tournament = False
 
-			# Iterating through the json
-			# list
-			if(data != None):		
-				for tourn in data:
-					if(tourn['id'] == standing.tournamentDirectory):
-						if(len(standing.players) > 0):
-							tourn['lastUpdated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-							tourn['roundNumbers'][standing.directory.lower()] = iRoundsFromUrl
-							if "players" not in tourn:
-								tourn['players'] = {}
-							tourn['players'][standing.directory.lower()] = len(standing.players)
-							if(winner != None):
-								tourn['winners'][standing.directory.lower()] = winner.name
-							if(winner != None and standing.directory.lower() == 'masters'):
-								tourn['tournamentStatus'] = "finished"
-							else:
-								tourn['tournamentStatus'] = "running"
-						did_update_tournament = True
+			# this should always be true just roll w it
+			if(tournament != None):		
+				if(len(standing.players) > 0):
+					tournament['lastUpdated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+					tournament['roundNumbers'][standing.directory.lower()] = iRoundsFromUrl
+					if "players" not in tournament:
+						tournament['players'] = {}
+					tournament['players'][standing.directory.lower()] = len(standing.players)
+					if(winner != None):
+						tournament['winners'][standing.directory.lower()] = winner.name
+					if(winner != None and standing.directory.lower() == 'masters'):
+						tournament['tournamentStatus'] = "finished"
+					else:
+						tournament['tournamentStatus'] = "running"
+				did_update_tournament = True
 				if(not did_update_tournament):
 					raise Exception('Tournament not updated in fetch_and_refresh_tournaments: ' + standing.tournamentDirectory)
 				
-			s3TournamentsExportString = json.dumps(data)
+			tournament_index = -1
+			ctr = 0
+			for temp_tourn in tournaments:
+				if temp_tourn['id'] == tournament['id']:
+					tournament_index = ctr
+					break
+				ctr += 1
+
+			if tournament_index == -1:
+				raise Exception('Tournament not found: ' + tournament['name'])
+			
+			tournaments[tournament_index] = tournament
+			
+			s3TournamentsExportString = json.dumps(tournaments)
 			# Put updated tournament status if it was updated (should always be yes)
 			s3.put_object(Bucket='pokescraper',
 						Key='tournaments.json',
@@ -541,6 +553,7 @@ def mainWorker(directory, link, getDecklists, getRoster, s3):
 			
 			# Update players for this tournament in S3
 			# I think this is how you put to a directory..??
+			s3PlayersDirectory = standing.tournamentDirectory + "_" + standing.directory + "_players.json"
 			s3.put_object(Bucket='pokescraper',
               Key=s3PlayersDirectory,
               Body=s3PlayersExportString.encode('UTF-8'),

@@ -20,4 +20,6 @@ s3 = session.client('s3')
 data = fetch_and_refresh_tournaments(s3Client=s3)
 
 for tournament in data:
-  print(tournament)
+  if (tournament['tournamentStatus'] != 'finished'):
+    print('Updating tournament - ' + tournament['name'])
+    mainWorker(tournament, False, False, s3, data)

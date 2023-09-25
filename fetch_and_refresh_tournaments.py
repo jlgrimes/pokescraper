@@ -7,7 +7,9 @@ import json
 import traceback
 
 def fetch_and_refresh_tournaments(s3Client):
-	try:		
+	try:
+		should_update_tournaments = False
+
 		openTournaments = []
 		s3TablesResponse = s3Client.get_object(Bucket='pokescraper',
                          Key='tournaments.json')
@@ -58,18 +60,15 @@ def fetch_and_refresh_tournaments(s3Client):
 							newData = {"id": new_id, "name": tName, "date": {"start": startDate, "end": endDate}, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef}
 
 							openTournaments.append(newData)
-							s3TournamentsExportString = json.dumps(openTournaments, indent = 4, sort_keys=True, ensure_ascii=False)
-							# Update tournaments.json
-							s3Client.put_object(Bucket='pokescraper',
-								Key='tournaments.json',
-								Body=s3TournamentsExportString.encode('UTF-8'),
-								ServerSideEncryption='aws:kms')
-			
-							return openTournaments
-			else:
-				print('no news @ ' + datetime.now().strftime("%Y/%m/%d - %H:%M:%S"))
-		else:
-			print('no news @ ' + datetime.now().strftime("%Y/%m/%d - %H:%M:%S"))
+							should_update_tournaments = True
+
+		if should_update_tournaments:
+			s3TournamentsExportString = json.dumps(openTournaments, indent = 4, sort_keys=True, ensure_ascii=False)
+			# Update tournaments.json
+			s3Client.put_object(Bucket='pokescraper',
+				Key='tournaments.json',
+				Body=s3TournamentsExportString.encode('UTF-8'),
+				ServerSideEncryption='aws:kms')
 
 		return openTournaments
 	
