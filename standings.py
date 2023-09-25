@@ -531,17 +531,22 @@ def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
 						player.decklist_json = decklists_players.players[deck_index].json_decklist
 				
 			# No clue what this is. Hopefully we don't need it.
-			jsonExport = open(standing.directory + standing.tournamentDirectory + ".json", 'wb')
-			jsonExport.write(('[').encode())
+			s3_standings_dir = standing.directory + "_" + standing.tournamentDirectory + ".json"
+			s3_standings_str = '['
 			first = True
 			for player in standing.players:
 				if(player):
 					if(not first):
-						jsonExport.write((',').encode())
-					player.ToJSON(jsonExport)
+						s3_standings_str += ','
+					player_export_str = player.get_json_export_str()
+					s3_standings_str += player_export_str
 					first = False
-			jsonExport.write((']').encode())
-			jsonExport.close()
+			s3_standings_str += ']'
+
+			s3.put_object(Bucket='pokescraper',
+					Key=s3_standings_dir,
+					Body=s3_standings_str.encode('UTF-8'),
+					ServerSideEncryption='aws:kms')
 
 			s3TablesExportString += ']'
 

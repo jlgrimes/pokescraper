@@ -263,6 +263,47 @@ class Player:
 		
 		file.write(('}').encode())
 
+	def get_json_export_str(self):
+		export_str = ''
+
+		export_str += '{'
+		export_str += '"name":"' + self.name.replace('"', '\\"') + '",'
+		export_str += '"placing":' + str(self.topPlacement) + ','
+		export_str += '"record":{"wins":' + str(self.wins) + ',"losses":' + str(self.losses) + ',"ties":' + str(self.ties) + '},'
+		export_str += '"resistances":{"self":' + str(self.WinPercentage) + ',"opp":' + str(self.OppWinPercentage) + ',"oppopp":' + str(self.OppOppWinPercentage) + '},'
+		if(len(self.decklist_json) > 0):
+			export_str += '"decklist":'+ self.decklist_json +','
+		else:
+			export_str += '"decklist":"",'
+		export_str += '"drop":'+ str(self.dropRound) + ','
+		
+		export_str += '"rounds":{'
+		round = 1
+		for match in self.matches:
+			name = "none"
+			if(match.player != None):
+				name = match.player.name
+			export_str += '"' + str(round) + '":{"name":"'+ name.replace('"', '\\"') + '","result":'
+			if(match.status == 0):
+				export_str += '"L"'
+			if(match.status == 1):
+				export_str += '"T"'
+			if(match.status == 2):
+				export_str += '"W"'
+			if(match.status == -1):
+				export_str += 'null'
+			export_str += ',"table":'
+			export_str += str(match.table)
+			export_str += '}'
+			if(round < len(self.matches)):
+				export_str += ','
+			round += 1
+		export_str += '}'
+		
+		export_str += '}'
+
+		return export_str
+
 	#toHTML
 	def ToHtml(self):
 		output = ""
