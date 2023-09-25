@@ -7,6 +7,7 @@ import sys
 import json
 import re
 import argparse
+import traceback
 
 #my imports
 from standing import Standing
@@ -34,13 +35,14 @@ def strip_accents(input_str):
 def Points(elem):
 	return elem.points
 
-def mainWorker(directory, link, getDecklists, getRoster):
+def mainWorker(directory, link, getDecklists, getRoster, s3):
 	lastPageLoaded = ""
 	page = None
 	soup = None
 
 	#sys.stdout.flush()
 	starttime = time.time()
+
 	try:
 		url = 'https://rk9.gg/tournament/' + link
 		page = requests.get(url)
@@ -58,7 +60,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 		print('starting at : ' + strTime)
 
 		standings = []		
-		
+
 		standings.append(Standing(title, directory, 'juniors', 'Juniors', [link], []))
 		standings.append(Standing(title, directory, 'seniors', 'Seniors', [link], []))
 		standings.append(Standing(title, directory, 'masters', 'Masters', [link], []))
@@ -122,16 +124,19 @@ def mainWorker(directory, link, getDecklists, getRoster):
 						publishedStandings.append(player.replace('  ', ' '))
 
 				publishedStandings = []
-				jsonExportTables = open(standing.directory + standing.tournamentDirectory + "tables.json", 'wb')
-				jsonExportTables.write(('[').encode())
+
+				s3TablesDirectory = standing.tournamentDirectory + "_" + standing.directory + "_tables.json"
+				s3TablesExportString = ""
+
+				s3TablesExportString += '['
 
 				stillPlaying = 0
 
 				for iRounds in range(iRoundsFromUrl):
 					firstTableData = True
 					if(iRounds > 0):
-						jsonExportTables.write((',').encode())
-					jsonExportTables.write(('{"tables":[').encode())
+						s3TablesExportString+= ','
+					s3TablesExportString += '{"tables":['
 					strToFind = standing.level + "R" + str(iRounds+1)
 					round_data = soup.find('div', attrs={'id':strToFind})
 					stillPlaying = 0
@@ -284,41 +289,41 @@ def mainWorker(directory, link, getDecklists, getRoster):
 						
 						if(p1 != None and p2 != None):
 							if(not firstTableData):
-								jsonExportTables.write((',').encode())
-							jsonExportTables.write(('{').encode())
-							jsonExportTables.write(('"table":'+str(table)+",").encode())
-							jsonExportTables.write(('"players":[{"name":').encode())
+								s3TablesExportString += ','
+							s3TablesExportString += '{'
+							s3TablesExportString += '"table":'+str(table)+","
+							s3TablesExportString += '"players":[{"name":'
 							if(p1 != None):
-								jsonExportTables.write(('"'+p1.name.replace('"', '\\"')+'"').encode())
+								s3TablesExportString += '"'+p1.name.replace('"', '\\"')+'"'
 							else:
-								jsonExportTables.write(('null').encode())
-							jsonExportTables.write((',"result":').encode())
+								s3TablesExportString += 'null'
+							s3TablesExportString += ',"result":'
 							if(p1status == 0):
-								jsonExportTables.write(('"L"').encode())
+								s3TablesExportString += '"L"'
 							if(p1status == 1):
-								jsonExportTables.write(('"T"').encode())
+								s3TablesExportString += '"T"'
 							if(p1status == 2):
-								jsonExportTables.write(('"W"').encode())
+								s3TablesExportString += '"W"'
 							if(p1status == -1):
-								jsonExportTables.write(('null').encode())
-							jsonExportTables.write((',"record":{"wins":' + str(p1.wins) + ',"losses":' + str(p1.losses) + ',"ties":' + str(p1.ties) + '}').encode())
-							jsonExportTables.write(('},{"name":').encode())
+								s3TablesExportString += 'null'
+							s3TablesExportString += ',"record":{"wins":' + str(p1.wins) + ',"losses":' + str(p1.losses) + ',"ties":' + str(p1.ties) + '}'
+							s3TablesExportString += '},{"name":'
 							if(p2 != None):
-								jsonExportTables.write(('"'+p2.name.replace('"', '\\"')+'"').encode())
+								s3TablesExportString += '"'+p2.name.replace('"', '\\"')+'"'
 							else:
-								jsonExportTables.write(('null').encode())
-							jsonExportTables.write((',"result":').encode())
+								s3TablesExportString += 'null'
+							s3TablesExportString += ',"result":'
 							if(p2status == 0):
-								jsonExportTables.write(('"L"').encode())
+								s3TablesExportString += '"L"'
 							if(p2status == 1):
-								jsonExportTables.write(('"T"').encode())
+								s3TablesExportString += '"T"'
 							if(p2status == 2):
-								jsonExportTables.write(('"W"').encode())
+								s3TablesExportString += '"W"'
 							if(p2status == -1):
-								jsonExportTables.write(('null').encode())
-							jsonExportTables.write((',"record":{"wins":' + str(p2.wins) + ',"losses":' + str(p2.losses) + ',"ties":' + str(p2.ties) + '}}').encode())
-							jsonExportTables.write((']').encode())
-							jsonExportTables.write(('}').encode())
+								s3TablesExportString += 'null'
+							s3TablesExportString += ',"record":{"wins":' + str(p2.wins) + ',"losses":' + str(p2.losses) + ',"ties":' + str(p2.ties) + '}}'
+							s3TablesExportString += ']'
+							s3TablesExportString += '}'
 							firstTableData = False
 					
 					if(len(standing.hidden)>0):
@@ -425,12 +430,14 @@ def mainWorker(directory, link, getDecklists, getRoster):
 							standing.roundsDay2 = standing.roundsDay1						
 					if(roundsSet == True and iRounds == 0):
 						print("Standing : " + standing.type + " - " + standing.tournamentName + " - in " + standing.tournamentDirectory + "/" + standing.directory + " for " + standing.divisionName + " NbPlayers: "+ str(len(standing.players)) + " -> [" + standing.level + "/" + str(standing.roundsDay1) + "/" + str(standing.roundsDay2) + "]")
-						jsonPlayers = open(standing.directory + standing.tournamentDirectory + "players.json", 'wb')
-						jsonPlayers.write(('{"players":[').encode())
+						
+						s3PlayersExportString = ""
+						s3PlayersDirectory = standing.tournamentDirectory + "_" + standing.directory + "_players.json"
+
+						s3PlayersExportString += '{"players":['
 						for player in standing.players:
-							jsonPlayers.write(('{"id":"'+str(player.id)+'","name":"'+str(player.name)+'"},').encode())
-						jsonPlayers.write((']}').encode())
-						jsonPlayers.close()
+							s3PlayersExportString += '{"id":"'+str(player.id)+'","name":"'+str(player.name)+'"},'
+						s3PlayersExportString += ']}'
 
 					if(decklists_players):
 						for player in standing.players:
@@ -445,13 +452,10 @@ def mainWorker(directory, link, getDecklists, getRoster):
 								player.decklist_ptcgo = decklists_players.players[deck_index].ptcgo_decklist
 								player.decklist_json = decklists_players.players[deck_index].json_decklist
 					
-					
 					if(iRounds+1 == standing.roundsDay2+3 and stillPlaying == 0):
 						winner = standing.players[0]
 							
-					jsonExportTables.write((']}').encode())
-			
-			
+					s3TablesExportString += ']}'
 
 			countries = []
 			for player in standing.players:
@@ -463,14 +467,11 @@ def mainWorker(directory, link, getDecklists, getRoster):
 			if len(countries)>0:
 				countCountries, namesCountries = zip(*sorted(zip(countCountries, namesCountries), reverse=True))
 			
-			f = open('tournaments.json', encoding="utf-8")
-			data = json.load(f)
-			f.close()
+			did_update_tournament = False
 
 			# Iterating through the json
 			# list
-			if(data != None):
-				dataAdded = False				
+			if(data != None):		
 				for tourn in data:
 					if(tourn['id'] == standing.tournamentDirectory):
 						if(len(standing.players) > 0):
@@ -485,22 +486,17 @@ def mainWorker(directory, link, getDecklists, getRoster):
 								tourn['tournamentStatus'] = "finished"
 							else:
 								tourn['tournamentStatus'] = "running"
-						dataAdded = True
-				if(not dataAdded):
-					months = {'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06', 'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'}
-					dateFields = date.replace('–', ' ').replace('-', ' ').replace(', ', ' ').split(" ")
-					if len(dateFields) > 4:
-						startDate = dateFields[4] + '-' + months[dateFields[0].strip()[:3].lower()] + '-' + f'{int(dateFields[1]):02d}'
-						endDate = dateFields[4] + '-' + months[dateFields[2].strip()[:3].lower()] + '-' + f'{int(dateFields[3]):02d}'
-					else:
-						startDate = dateFields[3] + '-' + months[dateFields[0].strip()[:3].lower()] + '-' + f'{int(dateFields[1]):02d}'
-						endDate = dateFields[3] + '-' + months[dateFields[0].strip()[:3].lower()] + '-' + f'{int(dateFields[2]):02d}'
-					
-					newData = {"id": standing.tournamentDirectory, "name": standing.tournamentName, "date": {"start": startDate, "end": endDate}, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": standing.urls[0]}
-					data.append(newData)
+						did_update_tournament = True
+				if(not did_update_tournament):
+					raise Exception('Tournament not updated in fetch_and_refresh_tournaments: ' + standing.tournamentDirectory)
+				
+			s3TournamentsExportString = json.dumps(data)
+			# Put updated tournament status if it was updated (should always be yes)
+			s3.put_object(Bucket='pokescraper',
+						Key='tournaments.json',
+						Body=s3TournamentsExportString.encode('UTF-8'),
+						ServerSideEncryption='aws:kms')
 
-			with open("tournaments.json", "w") as outfile:
-				json.dump(data, outfile)
 			nbRounds = 0
 
 			csvExport = open(standing.directory + standing.tournamentDirectory + ".csv", 'wb')
@@ -522,6 +518,7 @@ def mainWorker(directory, link, getDecklists, getRoster):
 						player.decklist_ptcgo = decklists_players.players[deck_index].ptcgo_decklist
 						player.decklist_json = decklists_players.players[deck_index].json_decklist
 				
+			# No clue what this is. Hopefully we don't need it.
 			jsonExport = open(standing.directory + standing.tournamentDirectory + ".json", 'wb')
 			jsonExport.write(('[').encode())
 			first = True
@@ -534,15 +531,36 @@ def mainWorker(directory, link, getDecklists, getRoster):
 			jsonExport.write((']').encode())
 			jsonExport.close()
 
-			jsonExportTables.write((']').encode())
-			jsonExportTables.close()
+			s3TablesExportString += ']'
+
+			# Update Tables for this tournament in S3
+			s3.put_object(Bucket='pokescraper',
+              Key=s3TablesDirectory,
+              Body=s3TablesExportString.encode('UTF-8'),
+              ServerSideEncryption='aws:kms')
 			
+			# Update players for this tournament in S3
+			# I think this is how you put to a directory..??
+			s3.put_object(Bucket='pokescraper',
+              Key=s3PlayersDirectory,
+              Body=s3PlayersExportString.encode('UTF-8'),
+              ServerSideEncryption='aws:kms')
+
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " with no issues")
+		return {
+        'statusCode': 200,
+        'body': 'Tournament successfully updated'
+    }
 	except Exception as e:
 		print(e)
+		print(traceback.format_exc())
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " WITH ISSUES")
+		return {
+        'statusCode': 200,
+        'body': str(e)
+    }
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
