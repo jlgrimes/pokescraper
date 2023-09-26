@@ -8,6 +8,9 @@ import json
 import re
 import argparse
 import traceback
+import os
+from supabase import create_client, Client
+from datetime import datetime
 
 #my imports
 from standing import Standing
@@ -35,6 +38,31 @@ def strip_accents(input_str):
 def Points(elem):
 	return elem.points
 
+def get_date(date_str):
+	[year, day, month] = date_str.split('-')
+	return datetime(year, day, month).date()
+
+def get_tournament_format(formats, tournament):
+	most_recent_format = None
+
+	for format in formats:
+		if most_recent_format == None:
+			most_recent_format = format
+		else:
+			start_date = get_date(tournament.date.start)
+			format_start_date = get_date(format.start_date)
+			most_recent_format_start_date = get_date(most_recent_format.start_date)
+
+			tournament_could_be_in_format = format_start_date <= start_date
+			tournament_is_closer_to_date = (format_start_date - start_date) < (most_recent_format_start_date - start_date)
+
+			if tournament_could_be_in_format and tournament_is_closer_to_date:
+				most_recent_format = format
+
+
+	return most_recent_format
+
+
 def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
 	lastPageLoaded = ""
 	page = None
@@ -44,6 +72,14 @@ def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
 	starttime = time.time()
 
 	try:
+		# supabase initialization
+		url: str = os.environ.get("SUPABASE_URL")
+		key: str = os.environ.get("SUPABASE_KEY")
+		supabase: Client = create_client(url, key)
+
+		# get formats
+		formats = supabase.table('Formats').select('id,format,rotation,start_date')
+
 		s3PlayersExportString = ""
 
 		directory = tournament['id']
@@ -503,6 +539,9 @@ def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
 			tournaments[tournament_index] = tournament
 			
 			s3TournamentsExportString = json.dumps(tournaments)
+
+			supabase.table('tournaments_new').upsert(tournaments).execute()
+			
 			# Put updated tournament status if it was updated (should always be yes)
 			s3.put_object(Bucket='pokescraper',
 						Key='tournaments.json',
