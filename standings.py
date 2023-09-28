@@ -8,15 +8,13 @@ import json
 import re
 import argparse
 import traceback
-import os
-from supabase import create_client, Client
-from datetime import datetime
+from supabase_client import supabase_client
 
 #my imports
 from standing import Standing
 from player import Player
 from decklists import Decklists, PlayersData
-
+from tournaments import add_dates_to_tournament, get_tournament_format
 
 import math
 from collections import Counter
@@ -38,32 +36,7 @@ def strip_accents(input_str):
 def Points(elem):
 	return elem.points
 
-def get_date(date_str):
-	[year, day, month] = date_str.split('-')
-	return datetime(year, day, month).date()
-
-def get_tournament_format(formats, tournament):
-	most_recent_format = None
-
-	for format in formats:
-		if most_recent_format == None:
-			most_recent_format = format
-		else:
-			start_date = get_date(tournament.date.start)
-			format_start_date = get_date(format.start_date)
-			most_recent_format_start_date = get_date(most_recent_format.start_date)
-
-			tournament_could_be_in_format = format_start_date <= start_date
-			tournament_is_closer_to_date = (format_start_date - start_date) < (most_recent_format_start_date - start_date)
-
-			if tournament_could_be_in_format and tournament_is_closer_to_date:
-				most_recent_format = format
-
-
-	return most_recent_format
-
-
-def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
+def mainWorker(tournament, getDecklists, getRoster, tournaments, formats):
 	lastPageLoaded = ""
 	page = None
 	soup = None
@@ -72,14 +45,6 @@ def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
 	starttime = time.time()
 
 	try:
-		# supabase initialization
-		url: str = os.environ.get("SUPABASE_URL")
-		key: str = os.environ.get("SUPABASE_KEY")
-		supabase: Client = create_client(url, key)
-
-		# get formats
-		formats = supabase.table('Formats').select('id,format,rotation,start_date')
-
 		s3PlayersExportString = ""
 
 		directory = tournament['id']
@@ -535,18 +500,12 @@ def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
 
 			if tournament_index == -1:
 				raise Exception('Tournament not found: ' + tournament['name'])
-			
-			tournaments[tournament_index] = tournament
-			
-			s3TournamentsExportString = json.dumps(tournaments)
 
-			supabase.table('tournaments_new').upsert(tournaments).execute()
-			
 			# Put updated tournament status if it was updated (should always be yes)
-			s3.put_object(Bucket='pokescraper',
-						Key='tournaments.json',
-						Body=s3TournamentsExportString.encode('UTF-8'),
-						ServerSideEncryption='aws:kms')
+			# s3.put_object(Bucket='pokescraper',
+			# 			Key='tournaments.json',
+			# 			Body=s3TournamentsExportString.encode('UTF-8'),
+			# 			ServerSideEncryption='aws:kms')
 
 			nbRounds = 0
 
@@ -582,26 +541,38 @@ def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
 					first = False
 			s3_standings_str += ']'
 
-			s3.put_object(Bucket='pokescraper',
-					Key=s3_standings_dir,
-					Body=s3_standings_str.encode('UTF-8'),
-					ServerSideEncryption='aws:kms')
+			# s3.put_object(Bucket='pokescraper',
+			# 		Key=s3_standings_dir,
+			# 		Body=s3_standings_str.encode('UTF-8'),
+			# 		ServerSideEncryption='aws:kms')
 
 			s3TablesExportString += ']'
 
 			# Update Tables for this tournament in S3
-			s3.put_object(Bucket='pokescraper',
-              Key=s3TablesDirectory,
-              Body=s3TablesExportString.encode('UTF-8'),
-              ServerSideEncryption='aws:kms')
+			# s3.put_object(Bucket='pokescraper',
+      #         Key=s3TablesDirectory,
+      #         Body=s3TablesExportString.encode('UTF-8'),
+      #         ServerSideEncryption='aws:kms')
 			
 			# Update players for this tournament in S3
 			# I think this is how you put to a directory..??
 			s3PlayersDirectory = standing.tournamentDirectory + "_" + standing.directory + "_players.json"
-			s3.put_object(Bucket='pokescraper',
-              Key=s3PlayersDirectory,
-              Body=s3PlayersExportString.encode('UTF-8'),
-              ServerSideEncryption='aws:kms')
+			# s3.put_object(Bucket='pokescraper',
+      #         Key=s3PlayersDirectory,
+      #         Body=s3PlayersExportString.encode('UTF-8'),
+      #         ServerSideEncryption='aws:kms')
+
+			
+		# Add dates
+		if tournament['date'] == None:
+			add_dates_to_tournament(date, tournament)
+
+		# Add format
+		tournament['format'] = get_tournament_format(formats, tournament)
+		
+		tournaments[tournament_index] = tournament
+		
+		supabase_client.table('tournaments_new').upsert([tournament]).execute()
 
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " with no issues")
@@ -618,24 +589,3 @@ def mainWorker(tournament, getDecklists, getRoster, s3, tournaments):
         'statusCode': 200,
         'body': str(e)
     }
-
-if __name__ == "__main__":
-	parser = argparse.ArgumentParser()
-	parser.add_argument("--url")
-	parser.add_argument("--id")
-	parser.add_argument("--decklists", action="store_true", help="read decklists from /roster/ page")
-	parser.add_argument("--roster", action="store_true", help="read roster from /roster/ page")
-	
-	args = parser.parse_args()
-
-	"""exemple: (Barcelona)
-	id = '0000090'
-	url = 'BA189xznzDvlCdfoQlBC'
-	"""
-	starttime = time.time()
-	while True:
-		try:
-			mainWorker(args.id, args.url, args.roster, args.decklists)
-		except Exception as e:
-			print(e)
-		time.sleep(240.0 - ((time.time() - starttime) % 120.0))

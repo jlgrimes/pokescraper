@@ -1,25 +1,24 @@
-import boto3
 import os
-from dotenv import load_dotenv
-
+from tournaments import fetch_tournaments
 from standings import mainWorker
-from fetch_and_refresh_tournaments import fetch_and_refresh_tournaments
+from supabase_client import supabase_client
 
 # mainWorker("0000090", "BA189xznzDvlCdfoQlBC", False, False)
 
-load_dotenv()
+# for tournament in data:
+#   #if (tournament['tournamentStatus'] != 'finished'):
+#   print('Updating tournament - ' + tournament['name'])
+#   mainWorker(tournament, False, False, data)
 
-access_key = os.environ.get("AWS_ACCESS_KEY")
-secret_key = os.environ.get("AWS_SECRET_KEY")
-session = boto3.Session(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-)
+def load_all_past_tournaments():
+  print('Fetching all tournaments...')
+  tournaments = fetch_tournaments(should_fetch_past_events=True)
 
-s3 = session.client('s3')
-data = fetch_and_refresh_tournaments(s3Client=s3)
-
-for tournament in data:
-  if (tournament['tournamentStatus'] != 'finished'):
+  formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
+  for tournament in tournaments:
     print('Updating tournament - ' + tournament['name'])
-    mainWorker(tournament, False, False, s3, data)
+    mainWorker(tournament, False, False, tournaments, formats)
+
+  print('Done!')
+
+load_all_past_tournaments()
