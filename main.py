@@ -17,7 +17,7 @@ def load_all_past_tournaments():
   formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
   for tournament in tournaments:
     print('Updating tournament - ' + tournament['name'])
-    mainWorker(tournament, False, False, tournaments, formats)
+    mainWorker(tournament, True, False, tournaments, formats)
 
   print('Done!')
 

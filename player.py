@@ -304,6 +304,37 @@ class Player:
 
 		return export_str
 
+	def get_export_object(self, tournament_id):
+		rounds = {}
+		roundNum = 1
+		for match in self.matches:
+			rounds[roundNum] = {
+				'name': match.player.name if match.player else None,
+				'result': 'L' if match.status == 0 else 'T' if match.status == 1 else 'W' if match.status == 2 else None,
+				'table': match.table,
+			}
+			roundNum += 1
+
+		return {
+			'name': self.name,
+			'placing': self.topPlacement,
+			'record': {
+				'wins': self.wins,
+				'losses': self.losses,
+				'ties': self.ties
+			},
+			'resistances': {
+				'self': self.WinPercentage,
+				'opp': self.OppWinPercentage,
+				'oppopp': self.OppOppWinPercentage
+			},
+			'decklist': self.decklist_json if len(self.decklist_json) > 0 else '',
+			'drop': self.dropRound,
+			'rounds': rounds,
+			'tournament_id': tournament_id,
+			'age_division': self.level
+		}
+
 	#toHTML
 	def ToHtml(self):
 		output = ""

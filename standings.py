@@ -571,8 +571,19 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats):
 		tournament['format'] = get_tournament_format(formats, tournament)
 		
 		tournaments[tournament_index] = tournament
+
+		players_export = []
+		for player in standing.players:
+			players_export.append(player.get_export_object(tournament['id']))
+			
+			print(player.get_export_object(tournament['id']))
+		raise Exception('we done here')
 		
+		# Update tournaments table
 		supabase_client.table('tournaments_new').upsert([tournament]).execute()
+
+		# Update standings table
+		supabase_client.table('standings_new').upsert(players_export).execute()
 
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " with no issues")

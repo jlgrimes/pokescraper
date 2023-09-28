@@ -81,7 +81,7 @@ def fetch_tournaments(should_fetch_past_events):
 							print('new Tournament! ' + tName + ' with url ' + linkRef)
 
 							new_id = 1
-							if openTournaments.__len__() > 0:
+							if len(openTournaments) > 0:
 								new_id = int(openTournaments[-1]['id']) + 1
 
 							newData = {"id": new_id, "name": tName, "date": None, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef}

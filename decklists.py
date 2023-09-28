@@ -105,12 +105,17 @@ def RK9ToJSON(page):
 			count = card.get("data-quantity")
 			name = card.get("data-cardname")
 			setnumber = card.get("data-setnum")
-			number = setnumber.split("-")[1]
-			set = setnumber.split("-")[0]
-			data = '{"count":' + count + ', "name": "' + name + '", "number":"' + number + '", "set": "' + set + '"}'
-			if(len(groupData) > 0):
-				groupData = groupData + ","
-			groupData = groupData + data
+			
+			if len(setnumber.split("-")) > 1:
+				number = setnumber.split("-")[1]
+				set = setnumber.split("-")[0]
+				data = '{"count":' + count + ', "name": "' + name + '", "number":"' + number + '", "set": "' + set + '"}'
+				if(len(groupData) > 0):
+					groupData = groupData + ","
+				groupData = groupData + data
+			else:
+				raise Exception('Invalid set number', setnumber)
+				
 	output = output + groupData
 	output = output + ']'
 
@@ -122,7 +127,10 @@ def RK9ToJSON(page):
 			name = card.get("data-cardname")
 			setnumber = card.get("data-setnum")
 			if len(setnumber) > 0:
-				number = setnumber.split("-")[1]
+				if len(setnumber.split("-")) > 1:
+					number = setnumber.split("-")[1]
+				else:
+					raise Exception('Invalid set number', setnumber)
 				set = setnumber.split("-")[0]
 				data = '{"count":' + count + ', "name": "' + name + '", "number":"' + number + '", "set": "' + set + '"}'
 				if(len(groupData) > 0):
@@ -138,9 +146,14 @@ def RK9ToJSON(page):
 			count = card.get("data-quantity")
 			name = card.get("data-cardname")
 			setnumber = card.get("data-setnum")
-			number = setnumber.split("-")[1]
-			set = setnumber.split("-")[0]
-			data = '{"count":' + count + ', "name": "' + name + '", "number":"' + number + '", "set": "' + set + '"}'
+			if len(setnumber.split("-")) > 1:
+				number = setnumber.split("-")[1]
+				set = setnumber.split("-")[0]
+				data = '{"count":' + count + ', "name": "' + name + '", "number":"' + number + '", "set": "' + set + '"}'
+			else:
+				data = '{"count":' + count + ', "name": "' + name + '"}'
+
+			
 			if(len(groupData) > 0):
 				groupData = groupData + ","
 			groupData = groupData + data
