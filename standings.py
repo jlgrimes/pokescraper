@@ -581,9 +581,9 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 
 		# Update standings table
 		if is_live:
-			supabase_client.table('standings_new').upsert(players_export).execute()
-		else:
 			supabase_client.table('live_standings').upsert(players_export).execute()
+		else:
+			supabase_client.table('standings_new').upsert(players_export).execute()
 
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " with no issues")
