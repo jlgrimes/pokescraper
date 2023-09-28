@@ -521,7 +521,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats):
 					pos = -1
 					for p in decklists_players.players:
 						pos = pos + 1
-						if((p.name == player.name or RemoveCountry(p.name) == player.name) and p.level == player.level):
+						if((p.name == player.name or RemoveCountry(p.name) == RemoveCountry(player.name)) and p.level == player.level):
 							deck_index = pos
 							break
 					if(deck_index != -1):
@@ -575,10 +575,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats):
 		players_export = []
 		for player in standing.players:
 			players_export.append(player.get_export_object(tournament['id']))
-			
-			print(player.get_export_object(tournament['id']))
-		raise Exception('we done here')
-		
+
 		# Update tournaments table
 		supabase_client.table('tournaments_new').upsert([tournament]).execute()
 
