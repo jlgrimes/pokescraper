@@ -36,7 +36,7 @@ def strip_accents(input_str):
 def Points(elem):
 	return elem.points
 
-def mainWorker(tournament, getDecklists, getRoster, tournaments, formats):
+def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_live):
 	lastPageLoaded = ""
 	page = None
 	soup = None
@@ -580,7 +580,10 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats):
 		supabase_client.table('tournaments_new').upsert([tournament]).execute()
 
 		# Update standings table
-		supabase_client.table('standings_new').upsert(players_export).execute()
+		if is_live:
+			supabase_client.table('standings_new').upsert(players_export).execute()
+		else:
+			supabase_client.table('live_standings').upsert(players_export).execute()
 
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " with no issues")

@@ -11,14 +11,26 @@ from supabase_client import supabase_client
 #   mainWorker(tournament, False, False, data)
 
 def load_all_past_tournaments():
-  print('Fetching all tournaments...')
+  print('Fetching past tournaments...')
   tournaments = fetch_tournaments(should_fetch_past_events=True)
 
   formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
   for tournament in tournaments:
     print('Updating tournament - ' + tournament['name'])
-    mainWorker(tournament, True, False, tournaments, formats)
+    mainWorker(tournament, True, False, tournaments, formats, False)
 
   print('Done!')
+
+def update_live_and_upcoming_tournaments():
+  print('Fetching upcoming tournaments...')
+  tournaments = fetch_tournaments(should_fetch_past_events=False)
+
+  formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
+  for tournament in tournaments:
+    print('Updating tournament - ' + tournament['name'])
+    mainWorker(tournament, True, False, tournaments, formats, True)
+
+  print('Done!')
+
 
 load_all_past_tournaments()
