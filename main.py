@@ -2,6 +2,7 @@ import os
 from tournaments import fetch_tournaments
 from standings import mainWorker
 from supabase_client import supabase_client
+import json
 
 # mainWorker("0000090", "BA189xznzDvlCdfoQlBC", False, False)
 
@@ -12,7 +13,10 @@ from supabase_client import supabase_client
 
 def load_all_past_tournaments():
   print('Fetching past tournaments...')
-  tournaments = fetch_tournaments(should_fetch_past_events=True)
+  # tournaments = fetch_tournaments(should_fetch_past_events=True)
+  f = open('tournaments.json')
+  tournaments = json.load(f)
+
 
   formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
   for tournament in tournaments:
@@ -44,5 +48,13 @@ def update_live_and_upcoming_tournaments():
 
   print('Done!')
 
+def delete_past_tournament(tournament_id):
+  print('Deleting tournament with id', tournament_id)
 
-load_past_tournament(58)
+  supabase_client.table('tournaments_new').delete().eq('id', tournament_id).execute()
+
+  print('Done!')
+
+load_all_past_tournaments()
+# load_past_tournament(58)
+# delete_past_tournament(58)
