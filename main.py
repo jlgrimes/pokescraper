@@ -55,6 +55,7 @@ def delete_past_tournament(tournament_id):
 
   print('Done!')
 
-load_all_past_tournaments()
+# load_all_past_tournaments()
 # load_past_tournament(58)
 # delete_past_tournament(58)
+update_live_and_upcoming_tournaments()

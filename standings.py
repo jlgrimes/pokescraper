@@ -70,6 +70,8 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 		standings.append(Standing(title, directory, 'juniors', 'Juniors', [link], []))
 		standings.append(Standing(title, directory, 'seniors', 'Seniors', [link], []))
 		standings.append(Standing(title, directory, 'masters', 'Masters', [link], []))
+
+		players_export = []
 		
 		decklists_players = None
 		roster = None
@@ -489,17 +491,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 				did_update_tournament = True
 				if(not did_update_tournament):
 					raise Exception('Tournament not updated in fetch_and_refresh_tournaments: ' + standing.tournamentDirectory)
-				
-			tournament_index = -1
-			ctr = 0
-			for temp_tourn in tournaments:
-				if temp_tourn['id'] == tournament['id']:
-					tournament_index = ctr
-					break
-				ctr += 1
-
-			if tournament_index == -1:
-				raise Exception('Tournament not found: ' + tournament['name'])
 
 			# Put updated tournament status if it was updated (should always be yes)
 			# s3.put_object(Bucket='pokescraper',
@@ -562,20 +553,28 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
       #         Body=s3PlayersExportString.encode('UTF-8'),
       #         ServerSideEncryption='aws:kms')
 
-			
+			for player in standing.players:
+				players_export.append(player.get_export_object(tournament['id']))
+
+		# START - updating tournament
+		tournament_index = -1
+		ctr = 0
+		for temp_tourn in tournaments:
+			if temp_tourn['id'] == tournament['id']:
+				tournament_index = ctr
+				break
+			ctr += 1
+
+		if tournament_index == -1:
+			raise Exception('Tournament not found: ' + tournament['name'])
+
 		# Add dates
 		if tournament['date'] == None:
 			add_dates_to_tournament(date, tournament)
 
 		# Add format
 		tournament['format'] = get_tournament_format(formats, tournament)
-		
 		tournaments[tournament_index] = tournament
-
-		players_export = []
-		for player in standing.players:
-			players_export.append(player.get_export_object(tournament['id']))
-
 		# Update tournaments table
 		supabase_client.table('tournaments_new').upsert([tournament]).execute()
 
@@ -584,6 +583,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 			supabase_client.table('live_standings').upsert(players_export).execute()
 		else:
 			supabase_client.table('standings_new').upsert(players_export).execute()
+
 
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " with no issues")
