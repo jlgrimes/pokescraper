@@ -4,6 +4,7 @@ import requests
 import re
 import time
 import concurrent.futures
+import json
 
 class Player:
 	def __init__(self, name, level, decklist):
@@ -83,7 +84,8 @@ def RK9ToPTCGO(page):
 
 
 def RK9ToJSON(page):
-	output = '{'
+	output_json = {}
+
 	soup = BeautifulSoup(page.content, "lxml")
 	table = soup.find("table", {"class":"decklist"})
 	pokemonList = table.find("ul", {"class":"pokemon"})
@@ -98,9 +100,10 @@ def RK9ToJSON(page):
 	energies = None
 	if energyList != None:
 		energies = energyList.find_all("li")
-	output = output + '"pokemon":['
-	groupData = ""
+
 	if pokemons != None:
+		output_json['pokemon'] = []
+
 		for card in pokemons:
 			count = card.get("data-quantity")
 			name = card.get("data-cardname")
@@ -109,19 +112,20 @@ def RK9ToJSON(page):
 			if len(setnumber.split("-")) > 1:
 				number = setnumber.split("-")[1]
 				set = setnumber.split("-")[0]
-				data = '{"count":' + count + ', "name": "' + name + '", "number":"' + number + '", "set": "' + set + '"}'
-				if(len(groupData) > 0):
-					groupData = groupData + ","
-				groupData = groupData + data
+
+				data_object = {
+					'count': count,
+					'name': name,
+					'number': number,
+					'set': set
+				}
+
+				output_json['pokemon'].append(data_object)
 			else:
 				raise Exception('Invalid set number', setnumber)
-				
-	output = output + groupData
-	output = output + ']'
 
-	output = output + ',"trainer":['
-	groupData = ""
 	if trainers != None:
+		output_json['trainer'] = []
 		for card in trainers:
 			count = card.get("data-quantity")
 			name = card.get("data-cardname")
@@ -132,16 +136,19 @@ def RK9ToJSON(page):
 				else:
 					raise Exception('Invalid set number', setnumber)
 				set = setnumber.split("-")[0]
-				data = '{"count":' + count + ', "name": "' + name + '", "number":"' + number + '", "set": "' + set + '"}'
-				if(len(groupData) > 0):
-					groupData = groupData + ","
-				groupData = groupData + data
-	output = output + groupData
-	output = output + ']'
-	
-	output = output + ',"energy":['
-	groupData = ""
+
+				data_object = {
+					'count': count,
+					'name': name,
+					'number': number,
+					'set': set
+				}
+
+				output_json['trainer'].append(data_object)
+
 	if energies != None:
+		output_json['energy'] = []
+		
 		for card in energies:
 			count = card.get("data-quantity")
 			name = card.get("data-cardname")
@@ -149,19 +156,21 @@ def RK9ToJSON(page):
 			if len(setnumber.split("-")) > 1:
 				number = setnumber.split("-")[1]
 				set = setnumber.split("-")[0]
-				data = '{"count":' + count + ', "name": "' + name + '", "number":"' + number + '", "set": "' + set + '"}'
+				data_object = {
+					'count': count,
+					'name': name,
+					'number': number,
+					'set': set
+				}
 			else:
-				data = '{"count":' + count + ', "name": "' + name + '"}'
+				data_object = {
+					'count': count,
+					'name': name,
+				}
 
-			
-			if(len(groupData) > 0):
-				groupData = groupData + ","
-			groupData = groupData + data
-	output = output + groupData
-	output = output + ']'
+			output_json['energy'].append(data_object)
 
-	output = output + '}'
-	return output
+	return json.dumps(output_json)
 
 def get_status(url, name, level):
 	return Player(name, level, requests.get(url=url))
