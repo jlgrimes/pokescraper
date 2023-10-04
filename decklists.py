@@ -170,7 +170,7 @@ def RK9ToJSON(page):
 
 			output_json['energy'].append(data_object)
 
-	return output_json
+	return json.dumps(output_json)
 
 def get_status(url, name, level):
 	return Player(name, level, requests.get(url=url))
