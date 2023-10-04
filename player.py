@@ -1,3 +1,5 @@
+import uuid
+
 #class Match : VS a player, with a status [W/L/T -> 2/0/1] and a table number
 class Match:
 	def __init__(self, player, status, table):
@@ -304,7 +306,7 @@ class Player:
 
 		return export_str
 
-	def get_export_object(self, tournament_id):
+	def get_export_object(self, tournament_id, name_hash_map):
 		rounds = {}
 		roundNum = 1
 		for match in self.matches:
@@ -315,7 +317,20 @@ class Player:
 			}
 			roundNum += 1
 
+		id_string = self.name + self.level + str(tournament_id)
+		dupe_salt = 0
+
+		if id_string in name_hash_map:
+			print(id_string + str(name_hash_map[id_string]))
+			dupe_salt = name_hash_map[id_string]
+			name_hash_map[id_string] += 1
+		else:
+			name_hash_map[id_string] = 1
+
+		id = str(uuid.uuid5(uuid.NAMESPACE_DNS, id_string + str(dupe_salt)))
+
 		return {
+			'id': id,
 			'name': self.name,
 			'placing': self.topPlacement,
 			'record': {

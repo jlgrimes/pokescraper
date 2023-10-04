@@ -89,6 +89,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 		for standing in standings:
 			print("Standing : " + standing.tournamentName + " - in " + standing.tournamentDirectory + "/" + standing.directory + " for " + standing.divisionName + " [" + standing.level + "/" + str(standing.roundsDay1) + "/" + str(standing.roundsDay2) + "]")
 			winner = None
+
 			for url in standing.urls:
 				#requesting RK9 pairings webpage
 				url = 'https://rk9.gg/pairings/' + url
@@ -553,8 +554,9 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
       #         Body=s3PlayersExportString.encode('UTF-8'),
       #         ServerSideEncryption='aws:kms')
 
+			name_hash_map = {}
 			for player in standing.players:
-				players_export.append(player.get_export_object(tournament['id']))
+				players_export.append(player.get_export_object(tournament['id'], name_hash_map))
 
 		# START - updating tournament
 		tournament_index = -1
