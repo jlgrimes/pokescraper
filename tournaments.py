@@ -14,8 +14,12 @@ def get_event_type(name):
 		return 'international-championships'
 	if 'world' in name.lower():
 		return 'world-championships'
-	if ' cup' in name.lower():
-		return 'league-cup'
+	if ' special' in name.lower():
+		return 'special-event'
+	if ' special' in name.lower():
+		return 'special-event'
+	if ' open' in name.lower():
+		return 'world-championships-open'
 
 def get_date(date_str):
 	[year, day, month] = date_str.split('-')
