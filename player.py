@@ -1,5 +1,20 @@
 import uuid
 
+def RemoveCountry(name):
+	start = name.find(' [')
+	stop = name.find(']')
+	if(stop-start == 4):
+		return name[0:start]
+	return name
+
+def get_country(name):
+	start = name.find(' [')
+	stop = name.find(']')
+	if(stop-start == 4):
+		return name[start+2:stop]
+	return None
+
+
 #class Match : VS a player, with a status [W/L/T -> 2/0/1] and a table number
 class Match:
 	def __init__(self, player, status, table):
@@ -331,7 +346,8 @@ class Player:
 
 		return {
 			'id': id,
-			'name': self.name,
+			'name': RemoveCountry(self.name),
+			'region': get_country(self.name),
 			'placing': self.topPlacement,
 			'record': {
 				'wins': self.wins,

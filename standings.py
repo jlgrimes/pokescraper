@@ -12,19 +12,12 @@ from supabase_client import supabase_client
 
 #my imports
 from standing import Standing
-from player import Player
+from player import Player, RemoveCountry
 from decklists import Decklists, PlayersData
-from tournaments import add_dates_to_tournament, get_tournament_format
+from tournaments import add_dates_to_tournament, get_tournament_format, get_event_type
 
 import math
 from collections import Counter
-
-def RemoveCountry(name):
-	start = name.find(' [')
-	stop = name.find(']')
-	if(stop-start == 4):
-		return name[0:start]
-	return name
 
 #removing accents (for js calls)
 def strip_accents(input_str):
@@ -480,6 +473,18 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 				if(len(standing.players) > 0):
 					tournament['lastUpdated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 					tournament['roundNumbers'][standing.directory.lower()] = iRoundsFromUrl
+
+					# Adds in the object for the tournament if there isn't one (there should be)
+					if 'should_reveal_decks' not in tournament or tournament['should_reveal_decks'] == None:
+						tournament['should_reveal_decks'] = {
+							'juniors': False,
+							'seniors': False,
+							'masters': False 
+						}
+					
+					# Reveals decks on the last day of day 1
+					tournament['should_reveal_decks'][standing.directory.lower()] = iRoundsFromUrl >= standing.roundsDay1
+
 					if "players" not in tournament:
 						tournament['players'] = {}
 					tournament['players'][standing.directory.lower()] = len(standing.players)
@@ -519,40 +524,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 					if(deck_index != -1):
 						player.decklist_ptcgo = decklists_players.players[deck_index].ptcgo_decklist
 						player.decklist_json = decklists_players.players[deck_index].json_decklist
-				
-			# No clue what this is. Hopefully we don't need it.
-			s3_standings_dir = standing.directory + "_" + standing.tournamentDirectory + ".json"
-			s3_standings_str = '['
-			first = True
-			for player in standing.players:
-				if(player):
-					if(not first):
-						s3_standings_str += ','
-					player_export_str = player.get_json_export_str()
-					s3_standings_str += player_export_str
-					first = False
-			s3_standings_str += ']'
-
-			# s3.put_object(Bucket='pokescraper',
-			# 		Key=s3_standings_dir,
-			# 		Body=s3_standings_str.encode('UTF-8'),
-			# 		ServerSideEncryption='aws:kms')
-
-			s3TablesExportString += ']'
-
-			# Update Tables for this tournament in S3
-			# s3.put_object(Bucket='pokescraper',
-      #         Key=s3TablesDirectory,
-      #         Body=s3TablesExportString.encode('UTF-8'),
-      #         ServerSideEncryption='aws:kms')
-			
-			# Update players for this tournament in S3
-			# I think this is how you put to a directory..??
-			s3PlayersDirectory = standing.tournamentDirectory + "_" + standing.directory + "_players.json"
-			# s3.put_object(Bucket='pokescraper',
-      #         Key=s3PlayersDirectory,
-      #         Body=s3PlayersExportString.encode('UTF-8'),
-      #         ServerSideEncryption='aws:kms')
 
 			name_hash_map = {}
 			for player in standing.players:
@@ -574,6 +545,9 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 		if tournament['date'] == None:
 			add_dates_to_tournament(date, tournament)
 
+		if 'event_type' not in tournament:
+			tournament['event_type'] = get_event_type(tournament['name'])
+
 		# Add format
 		tournament['format'] = get_tournament_format(formats, tournament)
 		tournaments[tournament_index] = tournament
@@ -581,10 +555,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 		supabase_client.table('tournaments_new').upsert([tournament]).execute()
 
 		# Update standings table
-		if is_live:
-			supabase_client.table('live_standings').upsert(players_export).execute()
-		else:
-			supabase_client.table('standings_new').upsert(players_export).execute()
+		supabase_client.table('standings_new').upsert(players_export).execute()
 
 
 		now = datetime.now() #current date and time

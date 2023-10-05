@@ -7,6 +7,16 @@ import json
 import traceback
 from supabase_client import supabase_client
 
+def get_event_type(name):
+	if ' regional' in name.lower():
+		return 'regional-championships'
+	if ' international' in name.lower():
+		return 'international-championships'
+	if 'world' in name.lower():
+		return 'world-championships'
+	if ' cup' in name.lower():
+		return 'league-cup'
+
 def get_date(date_str):
 	[year, day, month] = date_str.split('-')
 	return datetime(int(year), int(day), int(month))
@@ -84,7 +94,7 @@ def fetch_tournaments(should_fetch_past_events):
 							if len(openTournaments) > 0:
 								new_id = int(openTournaments[-1]['id']) + 1
 
-							newData = {"id": new_id, "name": tName, "date": None, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef}
+							newData = {"id": new_id, "name": tName, "date": None, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef, "should_reveal_decks": {"juniors": False, "seniors": False, "masters": False }, "event_type": get_event_type(tName) }
 
 							openTournaments.append(newData)
 							should_update_tournaments = True
