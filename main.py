@@ -3,6 +3,7 @@ from tournaments import fetch_tournaments
 from standings import mainWorker
 from supabase_client import supabase_client
 import json
+import time
 
 # mainWorker("0000090", "BA189xznzDvlCdfoQlBC", False, False)
 
@@ -60,3 +61,4 @@ def delete_past_tournament(tournament_id):
 # load_past_tournament(1)
 # delete_past_tournament(58)
 update_live_and_upcoming_tournaments()
+time.sleep(60)
