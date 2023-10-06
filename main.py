@@ -60,6 +60,7 @@ def delete_past_tournament(tournament_id):
 # load_all_past_tournaments()
 # load_past_tournament(1)
 # delete_past_tournament(58)
-update_live_and_upcoming_tournaments()
-print('...zzz...')
-time.sleep(60)
+while True:
+  update_live_and_upcoming_tournaments()
+  print('...zzz...')
+  time.sleep(60)
