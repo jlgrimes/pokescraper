@@ -2,10 +2,14 @@ from bs4 import BeautifulSoup
 import requests
 import time
 from datetime import datetime
+import os
 from os.path import exists
 import json
 import traceback
 from supabase_client import supabase_client
+import googlemaps
+
+gmaps = googlemaps.Client(key='Add Your Key here')
 
 def get_event_type(name):
 	if ' regional' in name.lower():
@@ -20,6 +24,11 @@ def get_event_type(name):
 		return 'special-event'
 	if ' open' in name.lower():
 		return 'world-championships-open'
+
+def get_location(rk9_location_str):
+	os.environ.get("GOOGLE_MAPS_API_KEY")
+	geocode_result = gmaps.geocode(rk9_location_str)
+	return json.dumps(geocode_result)
 
 def get_date(date_str):
 	[year, day, month] = date_str.split('-')
