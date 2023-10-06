@@ -38,13 +38,14 @@ def load_past_tournament(tournament_id):
 
 
 def update_live_and_upcoming_tournaments():
-  print('Fetching upcoming tournaments...')
-  tournaments = fetch_tournaments(should_fetch_past_events=False)
+  print('Fetching live and upcoming tournaments...')
 
+  tournaments = fetch_tournaments(False)
   formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
+
   for tournament in tournaments:
     print('Updating tournament - ' + tournament['name'])
-    mainWorker(tournament, True, False, tournaments, formats, True)
+    mainWorker(tournament, False, False, tournaments, formats, True)
 
   print('Done!')
 
@@ -55,7 +56,7 @@ def delete_past_tournament(tournament_id):
 
   print('Done!')
 
-load_all_past_tournaments()
+# load_all_past_tournaments()
 # load_past_tournament(1)
 # delete_past_tournament(58)
-# update_live_and_upcoming_tournaments()
+update_live_and_upcoming_tournaments()

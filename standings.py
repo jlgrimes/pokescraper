@@ -14,7 +14,7 @@ from supabase_client import supabase_client
 from standing import Standing
 from player import Player, RemoveCountry
 from decklists import Decklists, PlayersData
-from tournaments import add_dates_to_tournament, get_tournament_format, get_event_type
+from tournaments import add_dates_to_tournament, get_tournament_format, get_event_type, tournament_should_be_finished
 
 import math
 from collections import Counter
@@ -38,6 +38,10 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 	starttime = time.time()
 
 	try:
+		if tournament['tournamentStatus'] == 'finished':
+			print('Tournament finished. Skipping...')
+			return
+
 		s3PlayersExportString = ""
 
 		directory = tournament['id']
@@ -58,7 +62,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 		strTime = now.strftime("%Y/%m/%d - %H:%M:%S")
 		print('starting at : ' + strTime)
 
-		standings = []		
+		standings = []
 
 		standings.append(Standing(title, directory, 'juniors', 'Juniors', [link], []))
 		standings.append(Standing(title, directory, 'seniors', 'Seniors', [link], []))
@@ -544,6 +548,10 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 		# Add dates
 		if tournament['date'] == None:
 			add_dates_to_tournament(date, tournament)
+
+		if tournament_should_be_finished(tournament):
+			print('Overriding tournament status to finished...')
+			tournament['tournamentStatus'] = 'finished'
 
 		if 'event_type' not in tournament:
 			tournament['event_type'] = get_event_type(tournament['name'])

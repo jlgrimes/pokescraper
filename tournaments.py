@@ -45,6 +45,10 @@ def get_tournament_format(formats, tournament):
 
 	return most_recent_format['id']
 
+def tournament_should_be_finished(tournament):
+	end_date = get_date(tournament['date']['end'])
+	return datetime.now() > end_date
+
 def add_dates_to_tournament(date, tournament):
 	months = {'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06', 'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'}
 	dateFields = date.replace('–', ' ').replace('-', ' ').replace(', ', ' ').split(" ")
