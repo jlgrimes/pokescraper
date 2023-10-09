@@ -9,7 +9,8 @@ import traceback
 from supabase_client import supabase_client
 import googlemaps
 
-gmaps = googlemaps.Client(key='Add Your Key here')
+gmaps_key = os.environ.get("GOOGLE_MAPS_API_KEY")
+gmaps = googlemaps.Client(key=gmaps_key)
 
 def get_event_type(name):
 	if ' regional' in name.lower():
@@ -26,7 +27,6 @@ def get_event_type(name):
 		return 'world-championships-open'
 
 def get_location(rk9_location_str):
-	os.environ.get("GOOGLE_MAPS_API_KEY")
 	geocode_result = gmaps.geocode(rk9_location_str)
 	return json.dumps(geocode_result)
 
@@ -111,7 +111,7 @@ def fetch_tournaments(should_fetch_past_events):
 							if len(openTournaments) > 0:
 								new_id = int(openTournaments[-1]['id']) + 1
 
-							newData = {"id": new_id, "name": tName, "date": None, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef, "should_reveal_decks": {"juniors": False, "seniors": False, "masters": False }, "event_type": get_event_type(tName) }
+							newData = {"id": new_id, "name": tName, "date": None, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef, "should_reveal_decks": {"juniors": False, "seniors": False, "masters": False }, "event_type": get_event_type(tName), "finalized_in_standings": False }
 
 							openTournaments.append(newData)
 							should_update_tournaments = True

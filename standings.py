@@ -38,7 +38,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 	starttime = time.time()
 
 	try:
-		if tournament['tournamentStatus'] == 'finished':
+		if tournament['tournamentStatus'] == 'finished' and tournament['finalized_in_standings'] == True:
 			print('Tournament finished. Skipping...')
 			return
 
@@ -558,6 +558,10 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 
 		# Add format
 		tournament['format'] = get_tournament_format(formats, tournament)
+
+		# Set true for being finalized in standings
+		tournament['finalized_in_standings'] = True
+		
 		tournaments[tournament_index] = tournament
 		# Update tournaments table
 		supabase_client.table('tournaments_new').upsert([tournament]).execute()
