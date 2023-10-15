@@ -346,6 +346,7 @@ class Player:
 
 		return {
 			'id': id,
+			'id_str': id_string + str(dupe_salt),
 			'name': RemoveCountry(self.name),
 			'region': get_country(self.name),
 			'placing': self.topPlacement,
