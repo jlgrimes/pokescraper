@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from os.path import exists
 import json
@@ -56,6 +56,7 @@ def get_tournament_format(formats, tournament):
 
 def tournament_should_be_finished(tournament):
 	end_date = get_date(tournament['date']['end'])
+	end_date += timedelta(days=1)
 	return datetime.now() > end_date
 
 def add_dates_to_tournament(date, tournament):
