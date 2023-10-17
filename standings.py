@@ -529,9 +529,8 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 						player.decklist_ptcgo = decklists_players.players[deck_index].ptcgo_decklist
 						player.decklist_json = decklists_players.players[deck_index].json_decklist
 
-			name_hash_map = {}
 			for player in standing.players:
-				players_export.append(player.get_export_object(tournament['id'], name_hash_map))
+				players_export.append(player.get_export_object(tournament['id']))
 
 		# START - updating tournament
 		tournament_index = -1

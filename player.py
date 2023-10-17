@@ -321,7 +321,7 @@ class Player:
 
 		return export_str
 
-	def get_export_object(self, tournament_id, name_hash_map):
+	def get_export_object(self, tournament_id):
 		rounds = {}
 		roundNum = 1
 		for match in self.matches:
@@ -332,21 +332,14 @@ class Player:
 			}
 			roundNum += 1
 
-		id_string = self.name + self.level + str(tournament_id)
-		dupe_salt = 0
+		first_opp_name = rounds[0]['name'] if len(rounds) > 0 else 'nil'
+		id_string = self.name + self.level + str(tournament_id) + first_opp_name
 
-		if id_string in name_hash_map:
-			print(id_string + str(name_hash_map[id_string]))
-			dupe_salt = name_hash_map[id_string]
-			name_hash_map[id_string] += 1
-		else:
-			name_hash_map[id_string] = 1
-
-		id = str(uuid.uuid5(uuid.NAMESPACE_DNS, id_string + str(dupe_salt)))
+		id = str(uuid.uuid5(uuid.NAMESPACE_DNS, id_string))
 
 		return {
 			'id': id,
-			'id_str': id_string + str(dupe_salt),
+			'id_str': id_string,
 			'name': RemoveCountry(self.name),
 			'region': get_country(self.name),
 			'placing': self.topPlacement,
