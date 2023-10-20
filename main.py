@@ -81,13 +81,11 @@ def load_all_past_vgc():
 
   print('Done!')
 
-load_all_past_vgc()
-
-
 # load_all_past_tournaments()
 # load_past_tournament(53)
 # delete_past_tournament(58)
-# while True:
-#   update_live_and_upcoming_tournaments()
-#   print('...zzz...')
-#   time.sleep(60)
+while True:
+  update_live_and_upcoming_tournaments()
+  update_live_and_upcoming_vgc_tournaments()
+  print('...zzz...')
+  time.sleep(60)
