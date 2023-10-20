@@ -29,7 +29,7 @@ def strip_accents(input_str):
 def Points(elem):
 	return elem.points
 
-def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_live):
+def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_live, is_vgc):
 	lastPageLoaded = ""
 	page = None
 	soup = None
@@ -478,16 +478,16 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 					tournament['lastUpdated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 					tournament['roundNumbers'][standing.directory.lower()] = iRoundsFromUrl
 
-					# Adds in the object for the tournament if there isn't one (there should be)
-					if 'should_reveal_decks' not in tournament or tournament['should_reveal_decks'] == None:
-						tournament['should_reveal_decks'] = {
-							'juniors': False,
-							'seniors': False,
-							'masters': False 
-						}
-					
-					# Reveals decks on the last day of day 1
-					tournament['should_reveal_decks'][standing.directory.lower()] = iRoundsFromUrl >= standing.roundsDay1
+					if not is_vgc:
+						# Adds in the object for the tournament if there isn't one (there should be)
+						if 'should_reveal_decks' not in tournament or tournament['should_reveal_decks'] == None:
+							tournament['should_reveal_decks'] = {
+								'juniors': False,
+								'seniors': False,
+								'masters': False 
+							}
+						# Reveals decks on the last day of day 1
+						tournament['should_reveal_decks'][standing.directory.lower()] = iRoundsFromUrl >= standing.roundsDay1
 
 					if "players" not in tournament:
 						tournament['players'] = {}
@@ -555,18 +555,21 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 		if 'event_type' not in tournament:
 			tournament['event_type'] = get_event_type(tournament['name'])
 
-		# Add format
-		tournament['format'] = get_tournament_format(formats, tournament)
+		# Add format if TCG
+		if not is_vgc:
+			tournament['format'] = get_tournament_format(formats, tournament)
 
 		# Set true for being finalized in standings
 		tournament['finalized_in_standings'] = True
 		
 		tournaments[tournament_index] = tournament
 		# Update tournaments table
-		supabase_client.table('tournaments_new').upsert([tournament]).execute()
+		tournaments_table = 'tournaments_vgc' if is_vgc else 'tournaments_new'
+		supabase_client.table(tournaments_table).upsert([tournament]).execute()
 
 		# Update standings table
-		supabase_client.table('standings_new').upsert(players_export).execute()
+		standings_table = 'standings_vgc' if is_vgc else 'standings_new'
+		supabase_client.table(standings_table).upsert(players_export).execute()
 
 
 		now = datetime.now() #current date and time

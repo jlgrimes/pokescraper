@@ -22,7 +22,7 @@ def load_all_past_tournaments():
   formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
   for tournament in tournaments:
     print('Updating tournament - ' + tournament['name'])
-    mainWorker(tournament, True, False, tournaments, formats, False)
+    mainWorker(tournament, True, False, tournaments, formats, False, False)
 
   print('Done!')
 
@@ -33,7 +33,7 @@ def load_past_tournament(tournament_id):
   formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
 
   print('Updating tournament - ' + tournament['name'])
-  mainWorker(tournament, True, False, [tournament], formats, False)
+  mainWorker(tournament, True, False, [tournament], formats, False, False)
 
   print('Done!')
 
@@ -41,12 +41,12 @@ def load_past_tournament(tournament_id):
 def update_live_and_upcoming_tournaments():
   print('Fetching live and upcoming tournaments...')
 
-  tournaments = fetch_tournaments(False)
+  tournaments = fetch_tournaments(False, False)
   formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
 
   for tournament in tournaments:
     print('Updating tournament - ' + tournament['name'])
-    mainWorker(tournament, False, False, tournaments, formats, True)
+    mainWorker(tournament, False, False, tournaments, formats, True, False)
 
   print('Done!')
 
@@ -57,10 +57,37 @@ def delete_past_tournament(tournament_id):
 
   print('Done!')
 
+# VGC!
+def update_live_and_upcoming_vgc_tournaments():
+  print('VGC == Fetching live and upcoming tournaments...')
+
+  tournaments = fetch_tournaments(False, True)
+
+  for tournament in tournaments:
+    print('Updating VGC tournament - ' + tournament['name'])
+    mainWorker(tournament, False, False, tournaments, [], True, True)
+
+  print('Done!')
+
+# VGC!
+def load_all_past_vgc():
+  print('VGC == Fetching past tournaments...')
+
+  tournaments = fetch_tournaments(True, True)
+
+  for tournament in tournaments:
+    print('Updating VGC tournament - ' + tournament['name'])
+    mainWorker(tournament, False, False, tournaments, [], False, True)
+
+  print('Done!')
+
+load_all_past_vgc()
+
+
 # load_all_past_tournaments()
 # load_past_tournament(53)
 # delete_past_tournament(58)
-while True:
-  update_live_and_upcoming_tournaments()
-  print('...zzz...')
-  time.sleep(60)
+# while True:
+#   update_live_and_upcoming_tournaments()
+#   print('...zzz...')
+#   time.sleep(60)

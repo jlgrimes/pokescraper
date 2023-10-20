@@ -75,10 +75,12 @@ def add_dates_to_tournament(date, tournament):
 	}
 	
 
-def fetch_tournaments(should_fetch_past_events):
+def fetch_tournaments(should_fetch_past_events, is_vgc):
 	try:
+		tournaments_table = 'tournaments_vgc' if is_vgc else 'tournaments_new'
+
 		should_update_tournaments = False
-		openTournaments = supabase_client.table('tournaments_new').select('*').execute().data
+		openTournaments = supabase_client.table(tournaments_table).select('*').execute().data
 
 		page = requests.get('https://rk9.gg/events/pokemon')
 		soup = BeautifulSoup(page.content, "html.parser")
@@ -96,7 +98,8 @@ def fetch_tournaments(should_fetch_past_events):
 					linkRef = ''
 					links = tds[4].find_all('a', href=True)
 					for link in links:
-						if('tcg' in link.text.lower()):
+						target_phrase = 'vg' if is_vgc else 'tcg'
+						if(target_phrase in link.text.lower()):
 							linkRef = link['href'].replace('/tournament/', '')
 					if(len(linkRef)>0):
 						tournamentAlreadyDiscovered = False
@@ -112,7 +115,10 @@ def fetch_tournaments(should_fetch_past_events):
 							if len(openTournaments) > 0:
 								new_id = int(openTournaments[-1]['id']) + 1
 
-							newData = {"id": new_id, "name": tName, "date": None, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef, "should_reveal_decks": {"juniors": False, "seniors": False, "masters": False }, "event_type": get_event_type(tName), "finalized_in_standings": False }
+							if is_vgc:
+								newData = {"id": new_id, "name": tName, "date": None, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef, "event_type": get_event_type(tName), "finalized_in_standings": False }
+							else:
+								newData = {"id": new_id, "name": tName, "date": None, "decklists": 0, "players": {"juniors": 0, "seniors": 0, "masters": 0}, "winners": {"juniors": None, "seniors": None, "masters": None}, "tournamentStatus": "not-started", "roundNumbers": {"juniors": None, "seniors": None, "masters": None}, "lastUpdated": datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"), "rk9link": linkRef, "should_reveal_decks": {"juniors": False, "seniors": False, "masters": False }, "event_type": get_event_type(tName), "finalized_in_standings": False }
 
 							openTournaments.append(newData)
 							should_update_tournaments = True
