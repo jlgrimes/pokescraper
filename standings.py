@@ -499,6 +499,9 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 					if(winner != None):
 						tournament['winners'][standing.directory.lower()] = winner.name
 					if(winner != None and standing.directory.lower() == 'masters'):
+						if tournament['tournamentStatus'] != "finished":
+							send_tweet(tournament['name'] + ' has concluded. Congrats to ' + RemoveCountry(winner.name) + ' for the win!')
+							
 						tournament['tournamentStatus'] = "finished"
 					else:
 						tournament['tournamentStatus'] = "running"
