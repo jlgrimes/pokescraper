@@ -477,7 +477,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 			if(tournament != None):		
 				if(len(standing.players) > 0):
 					if tournament['roundNumbers'][standing.directory.lower()] != iRoundsFromUrl:
-						send_tweet(standing.directory.lower() + ' round ' + iRoundsFromUrl + 'has been posted!')
+						send_tweet(standing.directory.lower() + ' pairings for round ' + iRoundsFromUrl + 'are now up!')
 
 					tournament['lastUpdated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 					tournament['roundNumbers'][standing.directory.lower()] = iRoundsFromUrl
