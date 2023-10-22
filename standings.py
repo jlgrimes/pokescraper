@@ -18,6 +18,7 @@ from tournaments import add_dates_to_tournament, get_tournament_format, get_even
 
 import math
 from collections import Counter
+from twitter_bot import send_tweet
 
 #removing accents (for js calls)
 def strip_accents(input_str):
@@ -475,6 +476,9 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 			# this should always be true just roll w it
 			if(tournament != None):		
 				if(len(standing.players) > 0):
+					if tournament['roundNumbers'][standing.directory.lower()] != iRoundsFromUrl:
+						send_tweet(standing.directory.lower() + ' round ' + iRoundsFromUrl + 'has been posted!')
+
 					tournament['lastUpdated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 					tournament['roundNumbers'][standing.directory.lower()] = iRoundsFromUrl
 

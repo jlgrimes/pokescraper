@@ -9,3 +9,4 @@ supabase
 lxml
 python-dotenv
 googlemaps
+tweepy
