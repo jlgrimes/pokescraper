@@ -104,7 +104,6 @@ def fetch_tournaments(should_fetch_past_events, is_vgc):
 					if(len(linkRef)>0):
 						tournamentAlreadyDiscovered = False
 						for tournament in openTournaments:
-							print(tournament)
 							if(tournament['rk9link'] == linkRef):
 								tournamentAlreadyDiscovered = True
 							
