@@ -15,7 +15,7 @@ import time
 def load_all_past_tournaments():
   print('Fetching past tournaments...')
   # tournaments = fetch_tournaments(should_fetch_past_events=True)
-  f = open('tournaments.json')
+  f = open('tournaments.json', encoding="utf8")
   tournaments = json.load(f)
 
 
@@ -34,6 +34,14 @@ def load_past_tournament(tournament_id):
 
   print('Updating tournament - ' + tournament['name'])
   mainWorker(tournament, True, False, [tournament], formats, False, False)
+
+  print('Done!')
+
+def load_tournament_json(tournament_json):
+  formats = supabase_client.table('Formats').select('id,format,rotation,start_date').execute().data
+
+  print('Updating tournament - ' + tournament_json['name'])
+  mainWorker(tournament_json, True, False, [tournament_json], formats, False, False)
 
   print('Done!')
 
@@ -82,7 +90,6 @@ def load_all_past_vgc():
   print('Done!')
 
 # load_all_past_tournaments()
-# load_past_tournament(53)
 # delete_past_tournament(58)
 while True:
   update_live_and_upcoming_tournaments()
