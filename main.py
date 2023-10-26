@@ -15,7 +15,7 @@ import time
 def load_all_past_tournaments():
   print('Fetching past tournaments...')
   # tournaments = fetch_tournaments(should_fetch_past_events=True)
-  f = open('tournaments.json', encoding="utf8")
+  f = open('smol-tournaments.json', encoding="utf8")
   tournaments = json.load(f)
 
 
