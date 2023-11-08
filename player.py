@@ -336,7 +336,7 @@ class Player:
 			first_opp_name = rounds[1]['name']
 		else:
 			first_opp_name = 'nil'
-		id_string = self.name + self.level + str(tournament_id) + first_opp_name
+		id_string = str(self.name) + str(self.level) + str(tournament_id) + str(first_opp_name)
 
 		id = str(uuid.uuid5(uuid.NAMESPACE_DNS, id_string))
 

@@ -477,8 +477,8 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 			# this should always be true just roll w it
 			if(tournament != None):		
 				if(len(standing.players) > 0):
-					if standing.directory.lower() == 'masters' and tournament['roundNumbers'][standing.directory.lower()] != iRoundsFromUrl:
-						send_tweet('Masters pairings for round ' + str(iRoundsFromUrl) + 'are now up for ' + tournament['name'])
+					# if standing.directory.lower() == 'masters' and tournament['roundNumbers'][standing.directory.lower()] != iRoundsFromUrl:
+						# send_tweet('Masters pairings for round ' + str(iRoundsFromUrl) + 'are now up for ' + tournament['name'])
 
 					tournament['lastUpdated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
 					tournament['roundNumbers'][standing.directory.lower()] = iRoundsFromUrl
