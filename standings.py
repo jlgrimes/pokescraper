@@ -9,6 +9,7 @@ import re
 import argparse
 import traceback
 from supabase_client import supabase_client
+import logging
 
 #my imports
 from standing import Standing
@@ -583,8 +584,8 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
         'body': 'Tournament successfully updated'
     }
 	except Exception as e:
-		print(e)
-		print(traceback.format_exc())
+		logging.error(e,exc_info=True)
+
 		now = datetime.now() #current date and time
 		print('Ending at ' + now.strftime("%Y/%m/%d - %H:%M:%S") + " WITH ISSUES")
 		return {

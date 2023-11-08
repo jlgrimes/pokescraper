@@ -10,3 +10,4 @@ lxml
 python-dotenv
 googlemaps
 tweepy
+logging
