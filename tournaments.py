@@ -80,7 +80,7 @@ def fetch_tournaments(should_fetch_past_events, is_vgc):
 		tournaments_table = 'tournaments_vgc' if is_vgc else 'tournaments_new'
 
 		should_update_tournaments = False
-		openTournaments = supabase_client.table(tournaments_table).select('*').execute().data
+		openTournaments = supabase_client.table(tournaments_table).select('*').order('id').execute().data
 
 		page = requests.get('https://rk9.gg/events/pokemon')
 		soup = BeautifulSoup(page.content, "html.parser")
