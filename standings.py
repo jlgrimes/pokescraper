@@ -565,7 +565,8 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 			tournament['format'] = get_tournament_format(formats, tournament)
 
 		# Set true for being finalized in standings
-		tournament['finalized_in_standings'] = True
+		if tournament['tournamentStatus'] == 'finished':
+			tournament['finalized_in_standings'] = True
 		
 		tournaments[tournament_index] = tournament
 		# Update tournaments table
