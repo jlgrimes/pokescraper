@@ -9,7 +9,6 @@ import re
 import argparse
 import traceback
 from supabase_client import supabase_client
-import logging
 
 #my imports
 from standing import Standing
