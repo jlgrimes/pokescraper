@@ -70,13 +70,16 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 				tournament_details[temp_key] = list(filter(elIsNotEmpty, list(map(str.strip, child.text.strip().split('\n')))))
 				temp_key = ''
 
+		now = datetime.now() #current date and time
+		strTime = now.strftime("%Y/%m/%d %H:%M:%S")
+
+		tournament_details['updated-at'] = strTime
 		tournament['metadata'] = tournament_details
 
 		winners = []
 		rounds = []
 		nbplayers = []
-		now = datetime.now() #current date and time
-		strTime = now.strftime("%Y/%m/%d - %H:%M:%S")
+
 		print('starting at : ' + strTime)
 
 		standings = []
