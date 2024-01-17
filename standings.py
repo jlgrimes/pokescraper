@@ -56,6 +56,19 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 		title = pageTitle.split('\n')[0]
 		date =  pageTitle.split('\n')[1]
 
+		tournament_details = {}
+		tournament_details_list = soup.find("dl", {"class": "row card-text"})
+
+		temp_key = ''
+		for child in tournament_details_list:
+			if child.name == 'dt':
+				temp_key = child.text.strip()
+			elif child.name == 'dd':
+				tournament_details[temp_key] = ' '.join(child.text.strip().split())
+				temp_key = ''
+
+		tournament['metadata'] = tournament_details
+
 		winners = []
 		rounds = []
 		nbplayers = []
