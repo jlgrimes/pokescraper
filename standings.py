@@ -30,6 +30,9 @@ def strip_accents(input_str):
 def Points(elem):
 	return elem.points
 
+def elIsNotEmpty(el):
+	return len(el) > 0
+
 def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_live, is_vgc):
 	lastPageLoaded = ""
 	page = None
@@ -64,7 +67,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 			if child.name == 'dt':
 				temp_key = child.text.strip()
 			elif child.name == 'dd':
-				tournament_details[temp_key] = ' '.join(child.text.strip().split())
+				tournament_details[temp_key] = list(filter(elIsNotEmpty, list(map(str.strip, child.text.strip().split('\n')))))
 				temp_key = ''
 
 		tournament['metadata'] = tournament_details
