@@ -109,7 +109,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 
 			for url in standing.urls:
 				#requesting RK9 pairings webpage
-				url = 'https://rk9.gg/pairings/' + url
+				url = 'https://20240201t155451-dot-rk9-project-2.uk.r.appspot.com/pairings/' + url
 				print("\t" + url)
 				if(lastPageLoaded != url):
 					lastPageLoaded = url
