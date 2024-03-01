@@ -109,7 +109,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 
 			for url in standing.urls:
 				#requesting RK9 pairings webpage
-				url = 'https://20240201t155451-dot-rk9-project-2.uk.r.appspot.com/pairings/' + url
+				url = 'https://rk9.gg/pairings/' + url
 				print("\t" + url)
 				if(lastPageLoaded != url):
 					lastPageLoaded = url
@@ -158,15 +158,29 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 
 				stillPlaying = 0
 
+				level_slug = 0
+				if standing.level == 'P1':
+					level_slug = 1
+				if standing.level == 'P2':
+					level_slug = 2
+
+				all_round_data = []
+				print('Loading ' + str(iRoundsFromUrl) + 'rounds...')
+				for round_number in range(iRoundsFromUrl):
+					round_url = url + '?pod=' + str(level_slug) + '&rnd=' + str(round_number)
+					round_page = requests.get(round_url)
+					#page content to BeautifulSoup
+					round_soup = BeautifulSoup(round_page.content, "html.parser")
+					all_round_data.append(round_soup)
+
 				for iRounds in range(iRoundsFromUrl):
 					firstTableData = True
 					if(iRounds > 0):
 						s3TablesExportString+= ','
 					s3TablesExportString += '{"tables":['
 					strToFind = standing.level + "R" + str(iRounds+1)
-					round_data = soup.find('div', attrs={'id':strToFind})
 					stillPlaying = 0
-					for match_data in round_data.find_all('div', attrs={'class':'match'}):							
+					for match_data in all_round_data:
 						player1 = ""
 						player2 = ""
 						p1status = -1
@@ -184,12 +198,9 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 							if table2 != None:
 								table = table2.text								
 						for player_data in match_data.find_all('div', attrs={'class':'player1'}):
-							textData = player_data.text.split("\n")
-							
 							name = player_data.find_all('span', attrs={'class':'name'})
 							if(len(name) > 0):
-								score = textData[3]
-								score = score.strip()
+								score = re.findall(r'\(.*?\)', player_data.text)[0]
 								score = score.replace('(', '')
 								score = score.replace(')', '')
 								scores1 = re.split('-', score)
@@ -210,11 +221,9 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 								
 								
 						for player_data in match_data.find_all('div', attrs={'class':'player2'}):
-							textData = player_data.text.split("\n")
 							name = player_data.find_all('span', attrs={'class':'name'})
 							if(len(name) > 0):
-								score = textData[3]
-								score = score.strip()
+								score = re.findall(r'\(.*?\)', player_data.text)[0]
 								score = score.replace('(', '')
 								score = score.replace(')', '')
 								scores2 = re.split('-', score)
