@@ -47,8 +47,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 			print('Tournament finished. Skipping...')
 			return
 
-		s3PlayersExportString = ""
-
 		directory = tournament['id']
 		link = tournament['rk9link']
 
@@ -151,12 +149,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 						publishedStandings.append(player.replace('  ', ' '))
 
 				publishedStandings = []
-
-				s3TablesDirectory = standing.tournamentDirectory + "_" + standing.directory + "_tables.json"
-				s3TablesExportString = ""
-
-				s3TablesExportString += '['
-
 				stillPlaying = 0
 
 				level_slug = 0
@@ -176,9 +168,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 
 				for iRounds in range(iRoundsFromUrl):
 					firstTableData = True
-					if(iRounds > 0):
-						s3TablesExportString+= ','
-					s3TablesExportString += '{"tables":['
 					strToFind = standing.level + "R" + str(iRounds+1)
 					stillPlaying = 0
 					for match_data in all_round_data[iRounds]:
@@ -322,46 +311,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 								p2.addMatch(p1, p2status, p2dropped, iRounds+1 > standing.roundsDay1, iRounds+1 > standing.roundsDay2, table)
 							if(addP2 == True):
 								standing.players.append(p2)
-						
-						if(p1 != None and p2 != None):
-							if(not firstTableData):
-								s3TablesExportString += ','
-							s3TablesExportString += '{'
-							s3TablesExportString += '"table":'+str(table)+","
-							s3TablesExportString += '"players":[{"name":'
-							if(p1 != None):
-								s3TablesExportString += '"'+p1.name.replace('"', '\\"')+'"'
-							else:
-								s3TablesExportString += 'null'
-							s3TablesExportString += ',"result":'
-							if(p1status == 0):
-								s3TablesExportString += '"L"'
-							if(p1status == 1):
-								s3TablesExportString += '"T"'
-							if(p1status == 2):
-								s3TablesExportString += '"W"'
-							if(p1status == -1):
-								s3TablesExportString += 'null'
-							s3TablesExportString += ',"record":{"wins":' + str(p1.wins) + ',"losses":' + str(p1.losses) + ',"ties":' + str(p1.ties) + '}'
-							s3TablesExportString += '},{"name":'
-							if(p2 != None):
-								s3TablesExportString += '"'+p2.name.replace('"', '\\"')+'"'
-							else:
-								s3TablesExportString += 'null'
-							s3TablesExportString += ',"result":'
-							if(p2status == 0):
-								s3TablesExportString += '"L"'
-							if(p2status == 1):
-								s3TablesExportString += '"T"'
-							if(p2status == 2):
-								s3TablesExportString += '"W"'
-							if(p2status == -1):
-								s3TablesExportString += 'null'
-							s3TablesExportString += ',"record":{"wins":' + str(p2.wins) + ',"losses":' + str(p2.losses) + ',"ties":' + str(p2.ties) + '}}'
-							s3TablesExportString += ']'
-							s3TablesExportString += '}'
-							firstTableData = False
-					
+
 					if(len(standing.hidden)>0):
 						for player in standing.players:
 							if(player.name in standing.hidden):
@@ -467,11 +417,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 					if(roundsSet == True and iRounds == 0):
 						print("Standing : " + standing.type + " - " + standing.tournamentName + " - in " + standing.tournamentDirectory + "/" + standing.directory + " for " + standing.divisionName + " NbPlayers: "+ str(len(standing.players)) + " -> [" + standing.level + "/" + str(standing.roundsDay1) + "/" + str(standing.roundsDay2) + "]")
 
-						s3PlayersExportString += '{"players":['
-						for player in standing.players:
-							s3PlayersExportString += '{"id":"'+str(player.id)+'","name":"'+str(player.name)+'"},'
-						s3PlayersExportString += ']}'
-
 					if(decklists_players):
 						for player in standing.players:
 							deck_index = -1
@@ -487,8 +432,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 					
 					if(iRounds+1 == standing.roundsDay2+3 and stillPlaying == 0):
 						winner = standing.players[0]
-							
-					s3TablesExportString += ']}'
 
 			countries = []
 			for player in standing.players:
@@ -534,12 +477,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 				did_update_tournament = True
 				if(not did_update_tournament):
 					raise Exception('Tournament not updated in fetch_and_refresh_tournaments: ' + standing.tournamentDirectory)
-
-			# Put updated tournament status if it was updated (should always be yes)
-			# s3.put_object(Bucket='pokescraper',
-			# 			Key='tournaments.json',
-			# 			Body=s3TournamentsExportString.encode('UTF-8'),
-			# 			ServerSideEncryption='aws:kms')
 
 			nbRounds = 0
 
