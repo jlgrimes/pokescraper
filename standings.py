@@ -181,7 +181,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 					s3TablesExportString += '{"tables":['
 					strToFind = standing.level + "R" + str(iRounds+1)
 					stillPlaying = 0
-					for match_data in all_round_data:
+					for match_data in all_round_data[iRounds]:
 						player1 = ""
 						player2 = ""
 						p1status = -1
