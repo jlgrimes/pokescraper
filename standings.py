@@ -168,7 +168,7 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 				all_round_data = []
 				print('Loading ' + str(iRoundsFromUrl) + 'rounds...')
 				for round_number in range(iRoundsFromUrl):
-					round_url = url + '?pod=' + str(level_slug) + '&rnd=' + str(round_number)
+					round_url = url + '?pod=' + str(level_slug) + '&rnd=' + str(round_number + 1)
 					round_page = requests.get(round_url)
 					#page content to BeautifulSoup
 					round_soup = BeautifulSoup(round_page.content, "html.parser")
