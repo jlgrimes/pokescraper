@@ -480,12 +480,6 @@ def mainWorker(tournament, getDecklists, getRoster, tournaments, formats, is_liv
 
 			nbRounds = 0
 
-			csvExport = open(standing.directory + standing.tournamentDirectory + ".csv", 'wb')
-			for player in standing.players:
-				if(player):
-					player.ToCSV(csvExport)
-			csvExport.close()
-			
 			if(decklists_players):
 				for player in standing.players:
 					deck_index = -1

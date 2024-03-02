@@ -217,32 +217,6 @@ class Player:
 		output += "\n\n"
 		return output
 
-	#ToText
-	def ToTxt(self, rank):
-		output = str(rank) + " - " + self.name + " " + str(self.wins) + "-" + str(self.losses) + "-" + str(self.ties) + " -- " + str(self.points) + "pts " + str('%.2f' % (self.OppWinPercentage*100)) + "% " + str('%.2f' % (self.OppOppWinPercentage*100)) + "%"
-		output += "\n"
-		return output
-	
-	#ToCSV
-	def ToCSV(self, file):
-		round = 1
-		points = 0
-		for match in self.matches:
-			file.write((self.name + '\t').encode())
-			if(match.player != None):
-				file.write((match.player.name + '\t').encode())
-			if(match.status == 0):
-				file.write(('L\t').encode())
-			if(match.status == 1):
-				file.write(('T\t').encode())
-				points += 1
-			if(match.status == 2):
-				file.write(('W\t').encode())
-				points += 3
-			file.write((str(points) + '\t').encode())
-			file.write((str(round) + '\n').encode())
-			round += 1
-	#toJson
 	def ToJSON(self, file):
 		file.write(('{').encode())
 		file.write(('"name":"' + self.name.replace('"', '\\"') + '",').encode())
